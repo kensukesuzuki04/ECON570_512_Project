@@ -89,7 +89,7 @@ clear grid size quantile
 ngrid = zeros(8,1);
 for i = 1:8
        
-    ngrid(i) = median(lnn1(find(grid_lnk1_==kgrid(i) & imp_dummy ==1))) % importer with capital grid 1
+    ngrid(i) = mean(lnn1(find(grid_lnk1_==kgrid(i) & imp_dummy ==1))) % importer with capital grid 1
     
 end
 
@@ -108,7 +108,7 @@ end
 %% use hs
 nhsgrid = zeros(8,1);
 for i = 1:8
-    nhsgrid(i) = mean(lnnhs1(find(grid_lnk1_==kgrid(i) & imp_dummy ==1))); % importer with capital grid 1
+    nhsgrid(i) = median(lnnhs1(find(grid_lnk1_==kgrid(i) & imp_dummy ==1))); % importer with capital grid 1
 end
 
 grid_lnnhs1_ = zeros(N,1);
