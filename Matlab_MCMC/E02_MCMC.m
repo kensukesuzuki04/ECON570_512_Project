@@ -83,7 +83,7 @@ record = zeros(nrep,4); % what this 4 means?
 
 for i = 2:1:nrep
     %%% update paramerters %%%
-    updatepar; % construct [icurr acurr] from parcurr
+    F05_updatepar; % construct [icurr acurr] from parcurr
     
     if i == 2
         % compute prior density
@@ -91,13 +91,13 @@ for i = 2:1:nrep
         % take log
         lpriden = log(priden);
         % log likelihood at start value
-        ln= - F04loglf(parcurr);
+        ln= - F04_loglf(parcurr);
         % total 
         rllcurr = ln + sum(lpriden);
     end
     
     %%% update a %%%
-    updatepar;
+    F05_updatepar;
     aprop = acurr + randn(1,naparm).*stepa; % proposal
     
     % prior
@@ -107,7 +107,7 @@ for i = 2:1:nrep
     % update parprop
     parprop = [icurr aprop]; % change parameter for initial condition
     % log likelihood at start value
-    ln= - F04loglf(parprop);
+    ln= - F04_loglf(parprop);
     rllprop=ln + sum(lpriden);
     % update the parameter vector
     d = rllprop -rllcurr;
@@ -127,7 +127,7 @@ for i = 2:1:nrep
     end
     
     %%% update fixed/sunk cost %%%
-    updatepar;
+    F05_updatepar;
     iprop = icurr + randn(1,niparm).*stepi;
     %prior
     priden =[normpdf(iprop,priormi,priorvi) normpdf(acurr,priorma,priorva)];
@@ -136,7 +136,7 @@ for i = 2:1:nrep
     % update parprop
     parprop = [iprop acurr]; % change parameter for initial condition
     % log likelihood at start value
-    ln= - F04loglf(parprop);
+    ln= - F04_loglf(parprop);
     rllprop=ln + sum(lpriden);
     % update the parameter vector
     d = rllprop -rllcurr;

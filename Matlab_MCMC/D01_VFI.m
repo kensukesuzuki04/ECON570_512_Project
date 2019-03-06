@@ -46,11 +46,11 @@ dIN   = piI - piN + delta*(EVI - EVN);
 
 %CHOICE PROBABILITIES
 % (1) Starting as nonimporter
-PNN = F03condProb(dIN, gammaNS);
+PNN = F03_condProb(dIN, gammaNS);
 PNI = 1 - PNN;
 
 % (2) Start as nonimporter
-PIN = F03condProb(dIN,gammaIF);
+PIN = F03_condProb(dIN,gammaIF);
 PII = 1 - PIN;
 
 % interate on UC.VH, UC.VI, UC.VD, C.VH, C.VI
