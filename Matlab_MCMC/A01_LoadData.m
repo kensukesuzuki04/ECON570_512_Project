@@ -1,6 +1,6 @@
 %Load the data constructed from STATA
 
-BaseName = 'C:\Users\KensukeSuzuki\Documents\2018\Firm level data\Chinese data\Cleaned\priv_balanced_isic';
+BaseName = 'C:\Users\KensukeSuzuki\Box Sync\2018\03 Fall\ECON570 DevEcon\Minipaper\ECON570_512_Project\Data\priv_balanced_isic';
 FileName = [BaseName,num2str(isic),'.csv'];
 
 %Load data 

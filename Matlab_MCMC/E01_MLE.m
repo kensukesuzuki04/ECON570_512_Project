@@ -6,7 +6,13 @@ diary MLE.txt
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MAXMIMIZING LOG LIKELIFOOD
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Use HS
+usehs = 0;
 
+usegridn = 0;
+
+% ISIC code
+isic = 29;
 
 % Loading Data and Parameters
 A01_LoadData;
@@ -29,11 +35,6 @@ C04_NonimporterProfit;
 
 C05_ImporterProfit;
 
-%READ IN ESTIMATED/STARTING VALUES OF PARAMETERS
-SchEst=zeros(1,2);
-SchLlh=zeros(1,1);
-save SchEst SchEst
-save SchLlh SchLlh
 
 % %% Compute initial year probability
 as_int = [-9 4 2];
@@ -52,32 +53,35 @@ as_int = [-9 4 2];
 gamma_int=[10 100]; % gammaIF, marginS
 
 tic
-for k=1:1
-disp(['******* estimation ' num2str(k,'%10.0f') ' ******* ']);
+disp(['******* estimation with fmin search / fminunc  ******* ']);
+
 %S01startingvalue;
 x0=[gamma_int, as_int];
 
 options = optimset('Display','iter','TolFun',1e-4,'TolX',1e-8, 'MaxIter',100000,'MaxFunEvals',100000);
-[fmin_parameter,fval,exitflag,output] = fminsearch(@F04loglf,x0,options);
-
-
-fval
-par.gamma0=parameter(1:2);
-
-gammaIF_fmin = fmin_parameter(1);
-gammaNS_fmin = fmin_parameter(2);
-
-save SchEst SchEst
-save SchLlh SchLlh
-
-end
-fmintoc = toc
-
+[fmin_parameter,fval,exitflag,output] = fminsearch(@F04_loglf,x0,options);
 gammaIF = fmin_parameter(1);
 gammaNS = fmin_parameter(2);
 a0 = fmin_parameter(3);
 a1 = fmin_parameter(4);
 a2 = fmin_parameter(5);
+par.gamma0=fmin_parameter(1:2);
+gammaIF_fmin = fmin_parameter(1);
+gammaNS_fmin = fmin_parameter(2);
+
+
+% fmin unc
+options = optimset('Display','iter','TolFun',1e-4,'TolX',1e-8, 'MaxIter',100000,'MaxFunEvals',100000);
+[fminunc_parameter,fval,exitflag,output,grad,hessian] = fminunc(@F04_loglf,x0,options)
+fminunc.std =  sqrt(diag(inv(hessian)))
+fminunc.par =  fminunc_parameter
+
+save R_MLEfminunc fminunc
+
+fmintoc = toc
+
+
+
 
 %% anneal
 
@@ -87,11 +91,16 @@ disp(['******* estimation with simulated annealing ******* ']);
 %S01startingvalue;
 x0=[fmin_parameter];
 
-[anneal_parameter,fval_anneal] = anneal(@F04loglf,x0); 
+[anneal_parameter,fval_anneal] = anneal(@F04_loglf,x0); 
 
 end
 annealtoc = toc
 
-save MLEpara.mat fmin_parameter anneal_parameter
+save R_MLEpara fmin_parameter anneal_parameter
 
 diary off
+
+
+load R_MLEfminunc
+load R_MLEpara
+

@@ -6,6 +6,8 @@ clc
 % Use HS
 usehs = 0;
 
+usegridn = 1;
+
 % ISIC code
 isic = 29;
 
@@ -30,6 +32,7 @@ C04_NonimporterProfit;
 C05_ImporterProfit;
 
 % setting MH simulations
+%nrep = 25000; % number ofd repetitions
 nrep = 25000; % number ofd repetitions
 nparm = 5; % total number of parameters
 
@@ -171,8 +174,8 @@ for i = 2:1:nrep
     record(i,3) = accprob;
     record(1,3) = um(i,2);
     
-    save MCMCresult par rate record
+   
 end
-
+ save R_MCMCresult par rate record
     
     

@@ -38,7 +38,7 @@ D.T2006 = zeros(N,1);               % 2006 dummy
 D.T2006(find(year==2006)) = 1;
 D.T = [D.T2001, D.T2002, D.T2003, D.T2004, D.T2005, D.T2006];
 
-clear lnn1 lnn2 lnn3 kn kn2 k2n nx nx2 n2x
+clear  lnn2 lnn3 kn kn2 k2n nx nx2 n2x
 
 grid_lnn2_ = grid_lnn1_ .^2;
 grid_lnn3_ = grid_lnn1_ .^3;
@@ -57,6 +57,20 @@ k2nhs = lnk2 .* grid_lnnhs1_;
 nhsx = grid_lnnhs1_ .* lnx1;
 nhsx2 = grid_lnnhs1_ .* lnx2;
 nhs2x = grid_lnnhs2_ .* lnx1;
+
+
+if usegridn == 0
+    grid_lnn1_ = lnn1;
+    grid_lnn2_ = lnn1 .^2;
+    grid_lnn3_ = lnn1 .^3;
+    kn = lnk1 .* lnn1;
+    kn2 = lnk1 .* (lnn1.^2);
+    k2n = lnk2 .* lnn1;
+    nx = lnn1 .* lnx1;
+    nx2 =lnn1 .* lnx2;
+    n2x =(lnn1.^2) .* lnx1;
+else
+end
 
 % Stat.X = [ones(N,1), D.T, lnk1, lnk2, lnk3, lnx1, lnx2, lnx3, grid_lnnhs1_, grid_lnnhs2_ grid_lnnhs3_,...
 %             kx, kx2, k2x, knhs, knhs2, k2nhs, nhsx, nhsx2, nhs2x];
@@ -200,7 +214,9 @@ omega = (-1)/(1-Para.sigmahat)*Evol.phihat + betak*lnk1 + betan*grid_lnn1_;
 
 rev_intcpt = Stat.phihat(1,1) + mean(Stat.phihat(2:7));
 
-%% Export to matlab
+%% Export to CSV
 clear exp
-export_omega = table(id,year,imp_dummy,omega,lnk1, grid_lnk1);
-writetable(export_omega)
+R_EstimatedOmega = table(id,year,imp_dummy,omega,lnk1, grid_lnk1);
+writetable(R_EstimatedOmega)
+
+save R_FirstStage Evol Stat 
