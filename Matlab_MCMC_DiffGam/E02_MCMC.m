@@ -7,6 +7,8 @@ clc
 % Use HS
 usehs = 0;
 
+usegridn = 0;
+
 % ISIC code
 isic = 29;
 
@@ -123,7 +125,7 @@ for i = 2:1:nrep
         rllcurr = rllprop; % update
         display('proposal is accepted')
         display('initial condition a')
-        [aprop]
+        [aprop];
     else
         parcurr = parcurr;
         tacca(i) = tacca(i-1);
@@ -153,7 +155,7 @@ for i = 2:1:nrep
         rllcurr = rllprop; % update
         display('proposal is accepted')
         display('import fixed/sunk cost')
-        [iprop]
+        [iprop];
     else
         parcurr = parcurr;
         tacci(i) = tacci(i-1);
@@ -174,8 +176,7 @@ for i = 2:1:nrep
     record(i,3) = accprob;
     record(1,3) = um(i,2);
     
-    save MCMCresult par rate record
 end
-
+    save R_MCMCresult par rate record
     
     

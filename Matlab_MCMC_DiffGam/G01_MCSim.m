@@ -1,5 +1,7 @@
 % Monte Carlo Simulation
 
+clear all
+
 global Nf S T scale  notfirst numprodgrid ...
     xgrid lnk1 grid_lnk1 grid_lnn1 grid_lnnhs1 grid_lnn1_cand ...
     grid_kindex  omega ...
@@ -12,29 +14,44 @@ global Nf S T scale  notfirst numprodgrid ...
     rev_intcpt ...
     a0 a1 a2 a3
 
+load R_MCMCresult
+E03_PosteriorMean
 Sim.T = 20;
 
+useMCMC = 1;
+usehs = 0;
+usegridn = 1;
+isic = 29;
 
-%% Parameter
-Sim.gammaIF = gammaIF_fmin;
-Sim.gammaNS = gammaNS_fmin;
+if useMCMC == 1
+    Sim.gammaIF = ps_mean(1:8);
+    Sim.gammaNS = ps_mean(9:16);
+else
+    Sim.gammaIF = fmiunc.par(1);
+    Sim.gammaNS = fminunc.par(2);
+end
 
-Sim.gammaIF = 
-Sim.gammaNS = gammaNS_fmin;
 
-% a0 = -14.04943;
-% a1 = 33.68074;
-% a2 = -5.909098;
-% betak = -0.0155;
-% betan = -0.0153;
-%
-% alpha0 = 0.1110;
-% alpha1 = 0.4190;
-% alpha2 = -0.9900;
-% alpha3 = 0.5324;
-% alpha4 = 0.0126;
-%
-% sigmaxi = 0.0611;
+%%
+% Loading Data and Parameters
+A01_LoadData;
+
+% lnk and lnn grid
+A02_lnk_assignN_grid;
+
+% First stage estimation
+B01_FirstStage
+
+% Random grid on x
+C02_RandomGrid;
+
+% Productivity transition
+C03_ProductivityTransition;
+
+% Profit
+C04_NonimporterProfit;
+
+C05_ImporterProfit;
 
 
 %% VFI
@@ -53,11 +70,13 @@ Sim.n_cand = zeros(Nf*Sim.T, 1)
 Sim.omega = zeros(Nf*Sim.T, 1)
 Sim.imp = 999*ones(Nf*Sim.T, 1)
 Sim.grid_kindex = zeros(Nf*Sim.T, 1)
+Sim.FYgrid_kindex = zeros(Nf,1)
 
 % assign capital (grid) and candidate n (grid) from data
 for i = 1:Nf
     Sim.k((i-1)*Sim.T+1:i*Sim.T) = grid_lnk1((i-1)*T+1,1);
     Sim.grid_kindex((i-1)*Sim.T+1:i*Sim.T) = grid_kindex((i-1)*T+1,1);
+    Sim.FYgrid_kindex = Sim.grid_kindex(find(Sim.year==1));
     Sim.n_cand((i-1)*Sim.T+1:i*Sim.T) = grid_lnn1_cand((i-1)*T+1,1); % grid_lnn1_cand assumes constant capital stock
 end
 
@@ -71,8 +90,8 @@ Sim.imp(find(Sim.year==1)) = imp_dummy(find(year==2000));
 % compute next period productivity (based on today's productivity and import status)
 for t = 2:Sim.T
     
-    seed= 20190227+i + 19900904*t;
-    
+    seed = 19900904*t;
+    rng(seed)
     % period t productiviy
     shock = normrnd(0,sigmaxi,[Nf,1]);
     Sim.omega(find(Sim.year==t)) = alpha0 + ...
@@ -82,9 +101,16 @@ for t = 2:Sim.T
         + alpha4*Sim.imp(find(Sim.year==(t-1))) ...
         + shock;
     
+    Sim.cost = zeros(Nf, 1);
+    
+    for cap = 1:numkgrid
+       
     % draw relevant cost (depending on t-1 import status)
-    Sim.cost =  Sim.imp(find(Sim.year==(t-1))) .* exprnd(Sim.gammaIF,[Nf,1]) ... % case of importer
-        + (1-Sim.imp(find(Sim.year==(t-1)))) .* exprnd(Sim.gammaNS,[Nf,1]); % case of  non importer
+    gammaIFcap = Sim.gammaIF(cap);
+    gammaNScap = Sim.gammaNS(cap);
+    Sim.cost(find(Sim.FYgrid_kindex==cap)) =  Sim.imp(find(Sim.year==(t-1) & Sim.grid_kindex==cap)) .* exprnd(gammaIFcap,[length(Sim.imp(find(Sim.year==(t-1) & Sim.grid_kindex==cap))),1]) ... % case of importer
+        + (1-Sim.imp(find(Sim.year==(t-1) & Sim.grid_kindex==cap))) .* exprnd(gammaNScap,[length(Sim.imp(find(Sim.year==(t-1) & Sim.grid_kindex==cap))),1]); % case of  non importer
+    end
     
     % Profit at t
     SimpiI = exp(rev_intcpt +(1-sigmahat)*(betak*Sim.k(find(Sim.year==(t))) + betan * Sim.n_cand(find(Sim.year==(t))) - Sim.omega(find(Sim.year==(t))) )) ...
@@ -205,22 +231,25 @@ print(gcf,'-dpng',sprintf('-r%d',r), 'F01ExpProdAut.png');
 graphymin = 2000
 graphymax = 2000 + Sim.T -1;
 % Compare result
-plot(graphymin:graphymax,ImpPar.data(1,:),graphymin:graphymax,ImpPar.sim(1,:) )
-title('Import Participation Rate (all firms)')
-xlabel('Year')
-ylabel('Import Participation rate')
-legend('Data','Model','Location','southeast')
-print(gcf,'-dpng',sprintf('-r%d',r), 'Fig00.png');
+h=plot(graphymin:graphymax,ImpPar.data(1,:),'k',graphymin:graphymax,ImpPar.sim(1,:),'k:' )
+title('Import Participation Rate (all firms)', 'FontSize', 20)
+xlabel('Year','FontSize', 16)
+ylabel('Import Participation rate','FontSize', 16)
+legend({'Data','Model'},'Location','southeast','fontsize',16)
+set(gca,'FontSize',16);
+set(h,{'LineWidth'},{4;4})
+print(gcf,'-dpng',sprintf('-r%d',r), 'FigDiff00.png');
 
-
-BaseName='Fig0';
+BaseName='FigDiff0';
 for k=1:8
 s = k+1
 FileName=[BaseName,num2str(k)]
-plot(graphymin:graphymax,ImpPar.data(s,:),graphymin:graphymax,ImpPar.sim(s,:) )
-title(['Import Participation Rate (',num2str(k),') '])
-xlabel('Year')
-ylabel('Import Participation rate')
-legend('Data','Model','Location','southeast')
+h=plot(graphymin:graphymax,ImpPar.data(s,:),'k',graphymin:graphymax,ImpPar.sim(s,:),'k:' )
+title(['Import Participation Rate (',num2str(k),') '], 'FontSize', 20)
+xlabel('Year','FontSize', 16)
+ylabel('Import Participation rate','FontSize', 16)
+legend({'Data','Model'},'Location','southeast','fontsize',16)
+set(gca,'FontSize',16);
+set(h,{'LineWidth'},{4;4})
 print(gcf,'-dpng',sprintf('-r%d',r), FileName);
 end
